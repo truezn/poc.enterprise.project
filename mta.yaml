@@ -1,0 +1,40 @@
+_schema-version: 2.0.0
+ID: poc.enterprise.project
+version: 1.0.0
+modules:
+  - name: poc.enterprise.project-srv
+    type: java
+    path: srv
+    parameters:
+      memory: 512M
+    provides:
+      - name: srv_api
+        properties:
+          url: ${default-url}
+    requires:
+      - name: poc.enterprise.project-db-hdi-container
+        properties:
+          JBP_CONFIG_RESOURCE_CONFIGURATION: '[tomcat/webapps/ROOT/META-INF/context.xml:
+            {"service_name_for_DefaultDB" : "~{hdi-container-name}"}]'
+      - name: poc.enterprise.project-uaa
+  - name: poc.enterprise.project-db
+    type: hdb
+    path: db
+    parameters:
+      memory: 256M
+      disk-quota: 256M
+    requires:
+      - name: poc.enterprise.project-db-hdi-container
+resources:
+  - name: poc.enterprise.project-uaa
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service-plan: default
+      service: xsuaa
+      config:
+        xsappname: poc.enterprise.project-${space}
+        tenant-mode: dedicated
+  - name: poc.enterprise.project-db-hdi-container
+    type: com.sap.xs.hdi-container
+    properties:
+      hdi-container-name: ${service-name}
